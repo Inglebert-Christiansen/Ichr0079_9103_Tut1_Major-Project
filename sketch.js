@@ -1,18 +1,16 @@
 // --- Global Variables ---
-let circles = [];  // store circlepattern
+let circles = [];  // store circle pattern
 let beads = [];  //  store the beads
 let maxBead = 5000; // set max beads
 let maxCircle = 1000; // set max circles
-
 
 // --- Setup ---
 function setup() {
   createCanvas(windowWidth, windowHeight);
   angleMode(DEGREES);
-  noLoop();// make design static unless refreshed
-  initialisePatterns(); // call function for the circle and the beads
+  colorMode(HSB); // Set colour mode to HSB
+  initialisePatterns(); // call function for the circles and the beads
 }
-
 
 // --- Initialize big circles and beads from the classes ---
 
@@ -28,12 +26,11 @@ function setup() {
 function initialisePatterns() {
   let attempts = 0; // starting point for generation
   
-  // Use while loop to keep creating circles until it maxes out
+  // Use a while loop to keep creating circles until the maximum is reached
   while (attempts < maxCircle) { 
     let size = random(width * 0.05, width * 0.15); // Set random size relative to canvas width
     let x = random(size / 2, width - size / 2); // Random x position
-    let y = random(size / 2, height - size / 2); // Random y
-
+    let y = random(size / 2, height - size / 2); // Random y position
 
     // Check for circle overlap
     let overlapping = false;
@@ -45,7 +42,7 @@ function initialisePatterns() {
       }
     }
     
-    // keep adding circles until it overlaps!
+    // keep adding circles until it overlaps
     if (!overlapping) {
       circles.push(new CirclePattern(x, y, size));
     }
@@ -53,19 +50,18 @@ function initialisePatterns() {
     attempts++;
   }
 
-// Now for the beads!!!!
-
-  // Create small beads that avoid the main circle and eachother
+  // Now for the beads!
+  // Create small beads that avoid the main circles and each other
   attempts = 0;
   while (attempts < maxBead) { 
-    let beadSize = random(width * 0.005, width * 0.02); //random bead size relative to canvas size
+    let beadSize = random(width * 0.005, width * 0.02); // random bead size relative to canvas size
     let x = random(beadSize / 2, width - beadSize / 2); // random x position
-    let y = random(beadSize / 2, height - beadSize / 2); //random y position
+    let y = random(beadSize / 2, height - beadSize / 2); // random y position
 
-    // Check if bead overlaps with any main circles or other beads
+    // Check if the bead overlaps with any main circles or other beads
     let overlapping = false;
     for (let circle of circles) {
-      let d = dist(x, y, circle.x, circle.y); //distance between bead and each main circle
+      let d = dist(x, y, circle.x, circle.y); // distance between bead and each main circle
       if (d < (beadSize / 2 + circle.size / 2)) {
         overlapping = true;
         break;
@@ -79,7 +75,7 @@ function initialisePatterns() {
       }
     }
 
-    // Add bead to array if it doesnt overlap
+    // Add bead to array if it doesn’t overlap
     if (!overlapping) {
       beads.push(new Bead(x, y, beadSize));
     }
@@ -90,7 +86,7 @@ function initialisePatterns() {
 
 // --- Draw Function ---
 function draw() {
-  background(10, 10, 50); //set background to navy blue
+  background(230, 100, 20); // Set background to a dark blue colour
 
   // Draw each bead
   for (let bead of beads) {
@@ -99,7 +95,7 @@ function draw() {
 
   // Draw each circle
   for (let circle of circles) {
-    circle.display(); //display the circles
+    circle.display(); // display the circles
   }
 }
 
@@ -116,13 +112,14 @@ class CirclePattern {
   display() {
     push(); // Save transformation
     translate(this.x, this.y); // Move origin to centre of circle
-    
-    // Draw each layer from outside to in
+    rotate(frameCount * 0.2); // Rotate based on time
+
+    // Draw each layer from outside to inside
     for (let i = this.numLayers; i > 0; i--) {
       let layerSize = (this.size / this.numLayers) * i; //decide layer diameter
       let col = color(random(255), random(255), random(255)); // assign random colour for each layer
       
-      // between lines and dots
+      // alternate between lines and dots
       if (i % 2 == 0) {
         this.drawDots(layerSize, col); // Even layers: draw dots
       } else {
@@ -137,7 +134,7 @@ class CirclePattern {
 
   // method to draw dots around the circumference of each layer
   drawDots(size, col) {
-    fill(col); // Set fill color for base circle
+    fill(col); // Set fill colour for base circle
     noStroke();
     ellipse(0, 0, size); // Draw the base circle
 
@@ -153,7 +150,7 @@ class CirclePattern {
     }
   }
 
-  // method to draw lines from center of circle
+  // Method to draw lines from centre of circle
   drawLines(size, col) {
     stroke(col); // Set stroke colour
     strokeWeight(2);
@@ -174,10 +171,10 @@ class CirclePattern {
 // --- Bead Class ---
 class Bead {
   constructor(x, y, size) {
-    this.x = x; // x of bead center
-    this.y = y; // y of bead center
-    this.size = size; //diameter
-    this.color = color(255, random(100, 200), 0); //determine bead color (oranges)
+    this.x = x; // x of bead centre
+    this.y = y; // y of bead centre
+    this.size = size; // diameter
+    this.color = color(30, random(50, 100), 100); // set bead colour to orange
   }
 
   // Display the bead as a filled circle
@@ -191,7 +188,7 @@ class Bead {
 // make the whole thing resizable and scalable
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  circles = []; //clear circles
+  circles = []; // clear circles
   beads = []; // clear beads
   initialisePatterns(); // regenerate patterns
 }
