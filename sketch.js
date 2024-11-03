@@ -44,7 +44,7 @@ function initialisePatterns() {
     
     // keep adding circles until it overlaps
     if (!overlapping) {
-      let baseHue = random(360); // Assign a random base hue to each circle
+      let baseHue = random(0, 360); // set base color
       circles.push(new CirclePattern(x, y, size, baseHue));
     }
     
@@ -91,6 +91,7 @@ function draw() {
 
   // Draw each bead
   for (let bead of beads) {
+    bead.move(); // update bead position
     bead.display(); // display the beads
   }
 
@@ -107,6 +108,8 @@ class CirclePattern {
     this.y = y; // y-coordinate
     this.size = size; // Diameter of the main circle
     this.numLayers = int(random(3, 6)); //random number of layers
+    this.baseHue = baseHue; // unique base hue for each circle
+    this.hueShift = random(0.1, 0.5); // amount by which hue will gradually shift over time
   }
 
  //display the circles that alternate between lines and circles
@@ -116,13 +119,13 @@ class CirclePattern {
     rotate(frameCount * 0.2); // Rotate based on time
 
     // Gradually shift colour based on frameCount and the circle’s base hue
-    let colorOffset = (frameCount * 0.5) % 360; // change speed by adjusting the multiplier
+    let currentHue = (this.baseHue + frameCount * this.hueShift) % 360;
 
     // Draw each layer from outside to inside
     for (let i = this.numLayers; i > 0; i--) {
-      let layerSize = (this.size / this.numLayers) * i; //decide layer diameter
-      let col = color((this.baseHue + colorOffset + i * 20) % 360, 40, 90); // set colours to pastels
-      
+      let layerSize = (this.size / this.numLayers) * i;
+      let col = color((currentHue + i * 20) % 360, 40, 60); // earthier tones with gradual shift
+
       // alternate between lines and dots
       if (i % 2 == 0) {
         this.drawDots(layerSize, col); // Even layers: draw dots
@@ -178,6 +181,27 @@ class Bead {
     this.y = y; // y of bead centre
     this.size = size; // diameter
     this.color = color(30, random(50, 100), 100); // set bead colour to orange
+    this.vy = random(1, 2); // initial vertical velocity
+  }
+
+  // Move bead vertically and respawn at a random position if it moves out of canvas
+  move() {
+    this.y += this.vy;
+
+    // Respawn at a random position within the canvas if the bead moves out of bounds
+    if (this.y > height + this.size / 2 || this.y < -this.size / 2) {
+      this.x = random(width); // random x position within canvas
+      this.y = random(height); // random y position within canvas
+    }
+    
+    // Chatgpt was used to help figure out how to avoid overlapping with circles by adjusting horizontal movement
+    for (let circle of circles) {
+      let d = dist(this.x, this.y, circle.x, circle.y);
+      if (d < (this.size / 2 + circle.size / 2)) {
+        // Adjust x position to the left or right to avoid overlap
+        this.x += (this.x < circle.x) ? -1 : 1;
+      }
+    }
   }
 
   // Display the bead as a filled circle
