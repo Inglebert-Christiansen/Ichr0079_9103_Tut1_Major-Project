@@ -44,7 +44,8 @@ function initialisePatterns() {
     
     // keep adding circles until it overlaps
     if (!overlapping) {
-      circles.push(new CirclePattern(x, y, size));
+      let baseHue = random(360); // Assign a random base hue to each circle
+      circles.push(new CirclePattern(x, y, size, baseHue));
     }
     
     attempts++;
@@ -101,7 +102,7 @@ function draw() {
 
 // --- CirclePattern Class ---
 class CirclePattern {
-  constructor(x, y, size) {
+  constructor(x, y, size, baseHue) {
     this.x = x; // x-coordinate
     this.y = y; // y-coordinate
     this.size = size; // Diameter of the main circle
@@ -114,10 +115,13 @@ class CirclePattern {
     translate(this.x, this.y); // Move origin to centre of circle
     rotate(frameCount * 0.2); // Rotate based on time
 
+    // Gradually shift colour based on frameCount and the circle’s base hue
+    let colorOffset = (frameCount * 0.5) % 360; // change speed by adjusting the multiplier
+
     // Draw each layer from outside to inside
     for (let i = this.numLayers; i > 0; i--) {
       let layerSize = (this.size / this.numLayers) * i; //decide layer diameter
-      let col = color(random(255), random(255), random(255)); // assign random colour for each layer
+      let col = color((this.baseHue + colorOffset + i * 20) % 360, 40, 90); // set colours to pastels
       
       // alternate between lines and dots
       if (i % 2 == 0) {
@@ -166,7 +170,6 @@ class CirclePattern {
     }
   }
 }
-
 
 // --- Bead Class ---
 class Bead {
