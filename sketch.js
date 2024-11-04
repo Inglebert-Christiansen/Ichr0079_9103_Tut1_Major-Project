@@ -1,8 +1,10 @@
 // --- Global Variables ---
 let circles = [];  // store circle pattern
 let beads = [];  //  store the beads
+let tinyBeads = [];  // store the bouncing tiny beads
 let maxBead = 5000; // set max beads
 let maxCircle = 1000; // set max circles
+let maxTinyBeads = 200; // set max tiny beads
 
 // --- Setup ---
 function setup() {
@@ -10,6 +12,7 @@ function setup() {
   angleMode(DEGREES);
   colorMode(HSB); // Set colour mode to HSB
   initialisePatterns(); // call function for the circles and the beads
+  initialiseTinyBeads(); // call function for the tiny bouncing beads
 }
 
 // --- Initialize big circles and beads from the classes ---
@@ -85,9 +88,25 @@ function initialisePatterns() {
   }
 }
 
+// Initialize tiny bouncing beads
+function initialiseTinyBeads() {
+  for (let i = 0; i < maxTinyBeads; i++) {
+    let size = random(5, 10); // Random size for tiny beads
+    let x = random(width);
+    let y = random(height);
+    tinyBeads.push(new TinyBead(x, y, size));
+  }
+}
+
 // --- Draw Function ---
 function draw() {
   background(230, 100, 20); // Set background to a dark blue colour
+
+  // Draw each tiny bead
+  for (let tinyBead of tinyBeads) {
+    tinyBead.move();
+    tinyBead.display();
+  }
 
   // Draw each bead
   for (let bead of beads) {
@@ -110,13 +129,25 @@ class CirclePattern {
     this.numLayers = int(random(3, 6)); //random number of layers
     this.baseHue = baseHue; // unique base hue for each circle
     this.hueShift = random(0.1, 0.5); // amount by which hue will gradually shift over time
+    this.rotationDirection = random([-1, 1]); // Randomly choose -1 (counterclockwise) or 1 (clockwise)
+    
+    // took inspiration for the logic using behind Array.from with this link from MDN web docs  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+    this.layerPatterns = Array.from({ length: this.numLayers }, (_, i) => i % 2 === 0); // Alternating pattern for each layer
+    this.lastSwitchTime = millis(); // used millis to change the interval into miliseconds
+    this.switchInterval = 3000; // Invert patterns every 3 seconds
   }
 
- //display the circles that alternate between lines and circles
+  //display the circles with alternating layers, inverting every few seconds
   display() {
+    // Check if it's time to invert layer patterns
+    if (millis() - this.lastSwitchTime > this.switchInterval) {
+      this.layerPatterns = this.layerPatterns.map((pattern) => !pattern); // Invert each layer's pattern
+      this.lastSwitchTime = millis(); // Reset the switch timer
+    }
+
     push(); // Save transformation
     translate(this.x, this.y); // Move origin to centre of circle
-    rotate(frameCount * 0.2); // Rotate based on time
+    rotate(frameCount * 0.2 * this.rotationDirection); // Rotate in random direction
 
     // Gradually shift colour based on frameCount and the circle’s base hue
     let currentHue = (this.baseHue + frameCount * this.hueShift) % 360;
@@ -126,11 +157,11 @@ class CirclePattern {
       let layerSize = (this.size / this.numLayers) * i;
       let col = color((currentHue + i * 20) % 360, 40, 60); // earthier tones with gradual shift
 
-      // alternate between lines and dots
-      if (i % 2 == 0) {
-        this.drawDots(layerSize, col); // Even layers: draw dots
+      // Use the alternating pattern for each layer
+      if (this.layerPatterns[i - 1]) {
+        this.drawDots(layerSize, col); // Draw dots on this layer
       } else {
-        this.drawLines(layerSize, col); // Odd layers: draw lines
+        this.drawLines(layerSize, col); // Draw lines on this layer
       }
     }
     
@@ -180,7 +211,7 @@ class Bead {
     this.x = x; // x of bead centre
     this.y = y; // y of bead centre
     this.size = size; // diameter
-    this.color = color(30, random(50, 100), 100); // set bead colour to orange
+    this.color = color(210, random(50, 100), 100); // set bead colour to blue shades
     this.vy = random(1, 2); // initial vertical velocity
   }
 
@@ -204,11 +235,40 @@ class Bead {
     }
   }
 
-  // Display the bead as a filled circle
+ //display the bead
   display() {
     fill(this.color); // Set fill
     noStroke();
     ellipse(this.x, this.y, this.size); // draw the bead
+  }
+}
+
+// --- TinyBead Class ---
+class TinyBead {
+  constructor(x, y, size) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.color = color(210, random(50, 100), 100); // random shades of blue
+    this.vx = random(-2, 2); // initial horizontal speed
+    this.vy = random(-2, 2); // initial vertical speed
+  }
+
+  // make the beads bounce around
+  move() {
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Bounce off edges
+    if (this.x < 0 || this.x > width) this.vx *= -1;
+    if (this.y < 0 || this.y > height) this.vy *= -1;
+  }
+
+  // Display the tiny bead
+  display() {
+    fill(this.color);
+    noStroke();
+    ellipse(this.x, this.y, this.size);
   }
 }
 
@@ -217,5 +277,7 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   circles = []; // clear circles
   beads = []; // clear beads
+  tinyBeads = []; // clear tiny beads
   initialisePatterns(); // regenerate patterns
+  initialiseTinyBeads(); // regenerate tiny bouncing beads
 }
